@@ -1,0 +1,444 @@
+---
+title: "Homework 2"
+author: "Angela Zhao"
+output: html_document
+---
+ 
+```{r, message = FALSE, echo = FALSE}
+# load libraries + read in images
+library(readr)
+
+image1 <- read_csv("image1.csv")
+image1 <- data.matrix(image1)
+
+image2 <- read_csv("image2.csv")
+image2 <- data.matrix(image2)
+
+image3 <- read_csv("image3.csv")
+image3 <- data.matrix(image3)
+
+image4 <- read_csv("image4.csv")
+image4 <- data.matrix(image4)
+```
+
+# Image Compression Function
+
+The following function performs image compression using PCA.
+
+```{r}
+image_compression <- function(x, k) {
+  
+  # Cross-product matrix
+  V <- t(x) %*% x
+  
+  # Eigendecomposition
+  eig <- eigen(V)
+  
+  # Eigenvectors
+  U <- eig$vectors
+  
+  # Principal component scores
+  Z <- x %*% U
+  
+  # Rank-k approximation
+  x_k <- Z[, 1:k, drop = FALSE] %*% 
+    t(U[, 1:k, drop = FALSE])
+  
+  # Frobenius norm error
+  error <- norm(x - x_k, type = "F")
+  
+  # Return both
+  list(
+    approximation = x_k,
+    error = error
+  )
+}
+```
+
+```{r echo = FALSE}
+# display the image from the matrix
+show_image <- function(x, main = "") {
+  image(
+    t(x),
+    col = gray.colors(256),
+    zlim = range(x, na.rm = TRUE),
+    axes = FALSE,
+    main = main
+  )
+}
+```
+
+  
+# Image 1
+
+## Original Image + First 10 PCA Approximations 
+The following plot shows the original image followed by the PCA approximations for \(k=1,\ldots,10\). 
+
+```{r echo = FALSE} 
+par(
+  mfrow = c(3, 4),
+  mar = c(1, 1, 2, 1)
+)
+
+# Original
+show_image(
+  image1,
+  "Original"
+)
+
+# k = 1,...,10
+for (k in 1:10) {
+  
+  result <- image_compression(image1, k)
+  
+  show_image(
+    result$approximation,
+    paste("k =", k)
+  )
+}
+
+par(mfrow = c(1, 1))
+``` 
+
+## Approximation Error vs. k 
+The following plot shows the approximation error for all possible values of \(k\). 
+
+```{r echo = FALSE} 
+
+max_k1 <- min(dim(image1)) 
+
+image1_errors <- sapply( 
+  1:max_k1, 
+  function(k) image_compression(image1, k)$error 
+  ) 
+
+plot( 
+  1:max_k1, 
+  image1_errors, 
+  type = "l", 
+  xlab = "k", 
+  ylab = "Frobenius Norm Error", 
+  main = "Image 1: Approximation Error vs. k" ) 
+
+``` 
+
+## First Eigenvector and First PC Score 
+
+```{r echo = FALSE} 
+
+V1 <- t(image1) %*% image1 
+eig1 <- eigen(V1) 
+
+U1 <- eig1$vectors 
+Z1 <- image1 %*% U1 
+
+par( 
+  mfrow = c(1, 2) 
+  ) 
+
+plot( 
+  U1[, 1], 
+  type = "l", 
+  xlab = "Index", 
+  ylab = "Value", 
+  main = "Image 1: First Eigenvector" 
+  ) 
+
+plot( 
+  Z1[, 1], 
+  type = "l", 
+  xlab = "Row", 
+  ylab = "PC Score", 
+  main = "Image 1: First PC Score" 
+  ) 
+
+par(mfrow = c(1, 1)) 
+``` 
+
+### Interpretation 
+
+The **first eigenvector** represents the direction of greatest variation in the data captured by PCA. For this image, there is a significant spike around column 80, which means that the first principal component is dominated by the column around that index. The **first PC score** shows the values oscillating across all the rows. This means that the pattern is changing consistently across the rows of the image. 
+
+### Sufficiently Good Approximation 
+
+The images for k = 1 through k = 10 look very similar, meaning that the first few principal components capture the main visual appearance of the image. However, the error plot shows a more noticeable decrease around k = 80. This suggests that while a small k can preserve the overall appearance, using around 80 components provides a more accurate numerical approximation. Therefore, I would consider k around 80 if reducing the reconstruction error is important, even though the visual difference may not be very noticeable.
+
+  
+
+# Image 2 
+
+## Original Image + First 10 PCA Approximations 
+The following plot shows the original image followed by the PCA approximations for \(k=1,\ldots,10\). 
+
+```{r echo = FALSE} 
+par(
+  mfrow = c(3, 4),
+  mar = c(1, 1, 2, 1)
+)
+
+# Original
+show_image(
+  image2,
+  "Original"
+)
+
+# k = 1,...,10
+for (k in 1:10) {
+  
+  result <- image_compression(image2, k)
+  
+  show_image(
+    result$approximation,
+    paste("k =", k)
+  )
+}
+
+par(mfrow = c(1, 1))
+``` 
+
+## Approximation Error vs. k 
+The following plot shows the approximation error for all possible values of \(k\). 
+
+```{r echo = FALSE} 
+
+max_k2 <- min(dim(image2)) 
+
+image2_errors <- sapply( 
+  1:max_k2, 
+  function(k) image_compression(image2, k)$error 
+  ) 
+
+plot( 
+  1:max_k2, 
+  image2_errors, 
+  type = "l", 
+  xlab = "k", 
+  ylab = "Frobenius Norm Error", 
+  main = "Image 2: Approximation Error vs. k" 
+  ) 
+``` 
+
+## First Eigenvector and First PC Score 
+
+```{r echo = FALSE} 
+
+V2 <- t(image2) %*% image2 
+eig2 <- eigen(V2) 
+
+U2 <- eig2$vectors 
+Z2 <- image2 %*% U2 
+
+par( 
+  mfrow = c(1, 2) 
+  ) 
+
+plot( 
+  U2[, 1], 
+  type = "l", 
+  xlab = "Index", 
+  ylab = "Value", 
+  main = "Image 2: First Eigenvector" 
+  ) 
+
+plot( 
+  Z2[, 1], 
+  type = "l", 
+  xlab = "Row", 
+  ylab = "PC Score", 
+  main = "Image 2: First PC Score" 
+  ) 
+
+par(mfrow = c(1, 1)) 
+``` 
+
+### Interpretation 
+
+The first eigenvector shows a roughly linear decrease across the columns, meaning that the columns contribute gradually to the main pattern captured by the first principal component. The first PC score oscillates across the rows, showing that this main pattern changes consistently throughout the image.
+
+### Sufficiently Good Approximation 
+
+The error plot shows a noticeable bend around k = 3, suggesting that the first three principal components capture much of the important information in the image. After k = 3, the error decreases more gradually, so adding more components provides smaller improvements. The approximated images look fairly similar to each other, making it difficult to determine the difference visually. Based on the error plot, I would consider k = 3 to be a sufficient approximation.
+  
+
+# Image 3 
+
+## Original Image + First 10 PCA Approximations 
+The following plot shows the original image followed by the PCA approximations for \(k=1,\ldots,10\). 
+
+```{r echo = FALSE} 
+par(
+  mfrow = c(3, 4),
+  mar = c(1, 1, 2, 1)
+)
+
+# Original
+show_image(
+  image3,
+  "Original"
+)
+
+# k = 1,...,10
+for (k in 1:10) {
+  
+  result <- image_compression(image3, k)
+  
+  show_image(
+    result$approximation,
+    paste("k =", k)
+  )
+}
+
+par(mfrow = c(1, 1))
+``` 
+
+## Approximation Error vs. k 
+The following plot shows the approximation error for all possible values of \(k\). 
+
+```{r echo = FALSE} 
+max_k3 <- min(dim(image3)) 
+image3_errors <- sapply( 
+  1:max_k3,
+  function(k) image_compression(image3, k)$error 
+  ) 
+
+plot( 
+  1:max_k3, 
+  image3_errors, 
+  type = "l", 
+  xlab = "k", 
+  ylab = "Frobenius Norm Error", 
+  main = "Image 3: Approximation Error vs. k" ) 
+``` 
+
+## First Eigenvector and First PC Score 
+
+```{r echo = FALSE} 
+
+V3 <- t(image3) %*% image3 
+eig3 <- eigen(V3) 
+
+U3 <- eig3$vectors 
+Z3 <- image3 %*% U3
+
+par( 
+  mfrow = c(1, 2) 
+  ) 
+
+plot( 
+  U3[, 1], 
+  type = "l", 
+  xlab = "Index", 
+  ylab = "Value", 
+  main = "Image 3: First Eigenvector" 
+  ) 
+
+plot( 
+  Z3[, 1], 
+  type = "l", 
+  xlab = "Row", 
+  ylab = "PC Score", 
+  main = "Image 3: First PC Score" 
+  ) 
+
+par(mfrow = c(1, 1)) 
+
+``` 
+
+### Interpretation 
+The first eigenvector has a W-shaped pattern that decreases slightly across the columns. This suggests that the variation is being accounted by various parts of the image instead of specific columns. The first PC score has a curve with a peak near 100, which gradually decreases with some variation along the way. This means that the strength of this pattern increases across the earlier rows, reaches its highest point around the middle, and then decreases slower toward the later rows.
+
+### Sufficiently Good Approximation 
+
+The approximation error drops very quickly as \(k\) increases up to around \(k = 10\), and then the curve begins to flatten. This suggests that the first 10 principal components capture most of the important information in the image, while adding more components results in smaller improvements. Based on the error plot, I would consider \(k = 10\) to be a sufficient approximation. The plots show the image becoming clearer around k = 8.
+  
+
+# Image 4 
+
+## Original Image + First 10 PCA Approximations 
+The following plot shows the original image followed by the PCA approximations for \(k=1,\ldots,10\). 
+
+```{r echo = FALSE} 
+par(
+  mfrow = c(3, 4),
+  mar = c(1, 1, 2, 1)
+)
+
+# Original
+show_image(
+  image4,
+  "Original"
+)
+
+# k = 1,...,10
+for (k in 1:10) {
+  
+  result <- image_compression(image4, k)
+  
+  show_image(
+    result$approximation,
+    paste("k =", k)
+  )
+}
+
+par(mfrow = c(1, 1))
+``` 
+
+## Approximation Error vs. k 
+The following plot shows the approximation error for all possible values of \(k\). 
+
+```{r echo = FALSE} 
+
+max_k4 <- min(dim(image4)) 
+image4_errors <- sapply( 
+  1:max_k4, 
+  function(k) image_compression(image4, k)$error 
+  ) 
+
+plot( 
+  1:max_k4, 
+  image4_errors, 
+  type = "l", 
+  xlab = "k", 
+  ylab = "Frobenius Norm Error", 
+  main = "Image 4: Approximation Error vs. k" ) 
+``` 
+
+## First Eigenvector and First PC Score 
+
+```{r echo = FALSE} 
+V4 <- t(image4) %*% image4 
+eig4 <- eigen(V4) 
+
+U4 <- eig4$vectors 
+Z4 <- image4 %*% U4 
+
+par( 
+  mfrow = c(1, 2) 
+  ) 
+
+plot(
+  U4[, 1], 
+  type = "l", 
+  xlab = "Index", 
+  ylab = "Value", 
+  main = "Image 4: First Eigenvector" 
+  ) 
+
+plot( 
+  Z4[, 1], 
+  type = "l", 
+  xlab = "Row", 
+  ylab = "PC Score", 
+  main = "Image 4: First PC Score" 
+  ) 
+
+par(mfrow = c(1, 1)) 
+```
+
+### Interpretation 
+
+The first eigenvector has a sharp dip around index 80, suggesting that a group of columns around this location contributes differently to the main pattern captured by the first principal component. The first PC score has a similar downward dip around row 150, indicating that the strength or direction of this main pattern changes noticeably around that part of the image. Together, these graphs suggest that the main pattern identified by PCA is associated with a particular region of the image rather than being distributed uniformly across all columns and rows.
+
+### Sufficiently Good Approximation 
+
+Similarly to image 3, the approximation error drops quickly as \(k\) increases up to around \(k = 10 or k = 15\), and then the curve begins to flatten. This suggests that the first 10 principal components capture most of the important information in the image, while adding more components results in smaller improvements. Based on the error plot, I would consider \(k = 10\) to be a sufficient approximation. The image also starts getting clearer around then, which provides support for this point.
